@@ -16,39 +16,33 @@ jobs:
       - name: Checkout Code
         uses: actions/checkout@v4
 
-      # Force create dummy package files so Capacitor doesn't fail
       - name: Setup Project Structure
         run: |
           echo '{"name": "advanced-sepsis", "version": "1.0.0"}' > package.json
           mkdir -p www
           if [ ! -f www/index.html ]; then cp index.html www/index.html || true; fi
 
-      # Install Capacitor tools
       - name: Install Capacitor
         run: |
           npm install @capacitor/core @capacitor/cli @capacitor/android
 
-      # Initialize Capacitor configurations
       - name: Initialize Capacitor App
         run: |
           npx cap init "Advanced Sepsis" "com.advanced.sepsis" --web-dir=www
           npx cap add android
 
-      # Set up Java environment
       - name: Setup Java JDK
         uses: actions/setup-java@v4
         with:
           java-version: '17'
           distribution: 'zulu'
 
-      # Build the final Android APK file
       - name: Build Android APK
         run: |
           cd android
           chmod +x gradlew
           ./gradlew assembleDebug
 
-      # Upload the finished app file so you can download it
       - name: Upload Finished APK
         uses: actions/upload-artifact@v4
         with:
