@@ -1,0 +1,44 @@
+yaml
+
+name: MobileAppBuilder
+on: [push, workflow_dispatch]
+
+jobs:
+  android-build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository Code
+        uses: actions/checkout@v4
+
+      - name: Create Structure
+        run: |
+          echo '{"name": "advanced-sepsis", "version": "1.0.0"}' > package.json
+          mkdir -p www
+          if [ ! -f www/index.html ]; then cp index.html www/index.html || true; fi
+
+      - name: Install Mobile Tools
+        run: |
+          npm install @capacitor/core @capacitor/cli @capacitor/android
+
+      - name: Configure Capacitor Project
+        run: |
+          npx cap init "Advanced Sepsis" "com.advanced.sepsis" --web-dir=www
+          npx cap add android
+
+      - name: Setup Java Environment
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'zulu'
+
+      - name: Compile APK
+        run: |
+          cd android
+          chmod +x gradlew
+          ./gradlew assembleDebug
+
+      - name: Deliver Finished File
+        uses: actions/upload-artifact@v4
+        with:
+          name: advanced-sepsis-app
+          path: android/app/build/outputs/apk/debug/app-debug.apk
