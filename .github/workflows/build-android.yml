@@ -1,0 +1,55 @@
+yaml
+
+name: Build Android App
+
+on:
+  push:
+    branches: [ "main" ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      # 1. Clone your repository code into the runner
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      # 2. Set up Node.js environment
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      # 3. Create necessary configuration files for Capacitor
+      - name: Initialize App Packages
+        run: |
+          npm init -y
+          npm install @capacitor/core @capacitor/cli @capacitor/android
+          npx cap init "Advanced Sepsis" "com.advanced.sepsis" --web-dir=www
+          npx cap add android
+          npx cap sync
+
+      # 4. Set up Java JDK (Required to build the final Android app file)
+      - name: Setup Java JDK
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'zulu'
+          cache: 'gradle'
+          cache-dependency-path: 'android/**/*.gradle*'
+
+      # 5. Build the final Android APK file
+      - name: Build Android APK
+        run: |
+          cd android
+          chmod +x gradlew
+          ./gradlew assembleDebug
+
+      # 6. Upload the finished app file so you can download it
+      - name: Upload Finished APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: advanced-sepsis-app
+          path: android/app/build/outputs/apk/debug/app-debug.apk
