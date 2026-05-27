@@ -1,7 +1,8 @@
 yaml
 
-name: MobileAppBuilder
-on: [push, workflow_dispatch]
+name: BuildMobileApp
+
+on: push
 
 jobs:
   android-build:
