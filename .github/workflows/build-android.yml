@@ -4,7 +4,8 @@ name: Build Android App
 
 on:
   push:
-    branches: [ "main" ]
+    branches:
+      - main
   workflow_dispatch:
 
 jobs:
@@ -12,42 +13,42 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      # 1. Clone your repository code into the runner
       - name: Checkout Code
         uses: actions/checkout@v4
 
-      # 2. Set up Node.js environment
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '20'
-
-      # 3. Create necessary configuration files for Capacitor
-      - name: Initialize App Packages
+      # Force create dummy package files so Capacitor doesn't fail
+      - name: Setup Project Structure
         run: |
-          npm init -y
+          echo '{"name": "advanced-sepsis", "version": "1.0.0"}' > package.json
+          mkdir -p www
+          if [ ! -f www/index.html ]; then cp index.html www/index.html || true; fi
+
+      # Install Capacitor tools
+      - name: Install Capacitor
+        run: |
           npm install @capacitor/core @capacitor/cli @capacitor/android
+
+      # Initialize Capacitor configurations
+      - name: Initialize Capacitor App
+        run: |
           npx cap init "Advanced Sepsis" "com.advanced.sepsis" --web-dir=www
           npx cap add android
-          npx cap sync
 
-      # 4. Set up Java JDK (Required to build the final Android app file)
+      # Set up Java environment
       - name: Setup Java JDK
         uses: actions/setup-java@v4
         with:
           java-version: '17'
           distribution: 'zulu'
-          cache: 'gradle'
-          cache-dependency-path: 'android/**/*.gradle*'
 
-      # 5. Build the final Android APK file
+      # Build the final Android APK file
       - name: Build Android APK
         run: |
           cd android
           chmod +x gradlew
           ./gradlew assembleDebug
 
-      # 6. Upload the finished app file so you can download it
+      # Upload the finished app file so you can download it
       - name: Upload Finished APK
         uses: actions/upload-artifact@v4
         with:
